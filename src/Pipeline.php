@@ -32,7 +32,7 @@ class Pipeline
         $result = null;
         /** @var PipedProcessInterface $process */
         foreach($this->processes as $process){
-            is_null($result) ?: $process->setPipedData($result);
+            $process->setPipedData($result);
             $result = $process->process();
         }
         return isset($result) ? $result : null;
