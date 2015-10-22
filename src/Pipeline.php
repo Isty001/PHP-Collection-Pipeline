@@ -9,50 +9,32 @@ class Pipeline
      */
     private $processes;
 
-    /**
-     * @var mixed
-     */
-    private $result;
-
     public function __construct()
     {
         $this->processes = new \SplObjectStorage();
     }
 
     /**
-     * @param AbstractPipedProcess $process
-     * @return $this
+     * @param PipedProcessInterface $process
+     * @return Pipeline $this
      */
-    public function pipe(AbstractPipedProcess $process)
+    public function pipe(PipedProcessInterface $process)
     {
         $this->processes->attach($process);
         return $this;
     }
 
-    private function process()
+    /**
+     * @return mixed|null
+     */
+    public function doProcess()
     {
+        $result = null;
+        /** @var PipedProcessInterface $process */
         foreach($this->processes as $process){
+            is_null($result) ?: $process->setPipedData($result);
             $result = $process->process();
         }
-        return $result;
-    }
-
-    /**
-     * @return \SplObjectStorage
-     */
-    public function getProcesses()
-    {
-        return $this->processes;
-    }
-
-    /**
-     * @return mixed
-     */
-    public function getResult()
-    {
-        if(empty($this->result)){
-            return $this->process();
-        }
-        return $this->result;
+        return isset($result) ? $result : null;
     }
 }

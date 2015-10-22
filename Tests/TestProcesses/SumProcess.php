@@ -2,34 +2,22 @@
 
 namespace Tests\TestProcesses;
 
+use Pipeline\AbstractPipedProcess;
 use Pipeline\PipedProcessInterface;
 
-class ArrayProcess implements PipedProcessInterface
+class SumProcess implements PipedProcessInterface
 {
-    /**
-     * @var array
-     */
-    private $array;
-
     /**
      * @var mixed
      */
     private $pipedData;
 
     /**
-     * @param array $array
-     */
-    public function __construct(array $array)
-    {
-        $this->array = $array;
-    }
-
-    /**
      * {@inheritDoc}
      */
     public function process()
     {
-        return array_flip($this->array);
+        return array_sum((array)json_decode($this->pipedData));
     }
 
     /**
