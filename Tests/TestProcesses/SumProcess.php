@@ -15,7 +15,7 @@ class SumProcess implements PipedProcessInterface
     /**
      * {@inheritDoc}
      */
-    public function process()
+    public function getProcessResult()
     {
         return array_sum((array)json_decode($this->pipedData));
     }

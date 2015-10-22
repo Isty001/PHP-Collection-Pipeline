@@ -14,7 +14,7 @@ class JsonProcess implements PipedProcessInterface
     /**
      * {@inheritDoc}
      */
-    public function process()
+    public function getProcessResult()
     {
         return json_encode($this->pipedData);
     }

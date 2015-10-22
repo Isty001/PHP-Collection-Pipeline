@@ -27,13 +27,13 @@ class Pipeline
     /**
      * @return mixed|null
      */
-    public function doProcess()
+    public function process()
     {
         $result = null;
         /** @var PipedProcessInterface $process */
         foreach($this->processes as $process){
             $process->setPipedData($result);
-            $result = $process->process();
+            $result = $process->getProcessResult();
         }
         return isset($result) ? $result : null;
     }

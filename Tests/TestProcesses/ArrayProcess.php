@@ -27,7 +27,7 @@ class ArrayProcess implements PipedProcessInterface
     /**
      * {@inheritDoc}
      */
-    public function process()
+    public function getProcessResult()
     {
         return array_flip($this->array);
     }

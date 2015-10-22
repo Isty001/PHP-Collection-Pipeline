@@ -12,5 +12,5 @@ interface PipedProcessInterface
     /**
      * @return mixed
      */
-    public function process();
+    public function getProcessResult();
 }
