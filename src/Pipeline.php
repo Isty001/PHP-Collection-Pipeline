@@ -5,36 +5,78 @@ namespace Pipeline;
 class Pipeline
 {
     /**
-     * @var \SplObjectStorage
+     * @var mixed
      */
-    private $processes;
+    protected $collection;
 
-    public function __construct()
+    /**
+     * @param ...$input
+     */
+    public function __construct(...$input)
     {
-        $this->processes = new \SplObjectStorage();
+        $this->collection = new Collection(is_array($input[0]) ? $input[0] : $input);
     }
 
     /**
-     * @param PipedProcessInterface $process
-     * @return Pipeline $this
+     * @param string $expression
+     * @return Pipeline
      */
-    public function pipe(PipedProcessInterface $process)
+    public function filter(string $expression) : self
     {
-        $this->processes->attach($process);
+        list($subject, $operator, $comparedTo) = explode(' ', $expression);
+
+        foreach ($this->collection as $element) {
+            if (method_exists($method = 'get' . ucfirst($subject), $element)) {
+                $value = $method;
+            } elseif (property_exists($subject, $element)) {
+                $value = $subject;
+            }
+            if (isset($value)) {
+                if (!$this->compare($element->$method(), $operator, $comparedTo)) {
+                    $this->collection->remove($element);
+                }
+            }
+        }
         return $this;
     }
 
     /**
-     * @return mixed|null
+     * @param int $length
+     * @return Pipeline
      */
-    public function process()
+    public function take(int $length) : self
     {
-        $result = null;
-        /** @var PipedProcessInterface $process */
-        foreach($this->processes as $process){
-            $process->setPipedData($result);
-            $result = $process->getProcessResult();
+        $this->collection->slice(0, $length);
+        return $this;
+    }
+
+    /**
+     * @param mixed $subject
+     * @param string $operator
+     * @param mixed $compareTo
+     * @return bool
+     */
+    private function compare($subject, string $operator, $compareTo)
+    {
+        $compareTo = $compareTo !== 'null' ?: null;
+
+        switch ($operator) {
+            case '==':
+                return $subject == $compareTo;
+            case '>':
+                return $subject > $compareTo;
+            case '<':
+                return $subject < $compareTo;
+            case '!==':
+                return $subject !== $compareTo;
         }
-        return isset($result) ? $result : null;
+    }
+
+    /**
+     * @return Collection
+     */
+    public function getCollection()
+    {
+        return $this->collection;
     }
 }

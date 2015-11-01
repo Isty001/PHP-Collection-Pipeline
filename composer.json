@@ -5,8 +5,8 @@
 
     "autoload" :{
         "psr-4": {
-            "Pipeline\\": "src",
-            "Tests\\": "Tests/"
+            "Pipeline\\": "src/",
+            "Tests\\": "tests/"
         }
     }
 }
