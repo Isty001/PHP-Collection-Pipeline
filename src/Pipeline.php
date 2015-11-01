@@ -5,7 +5,7 @@ namespace Pipeline;
 class Pipeline
 {
     /**
-     * @var mixed
+     * @var Collection
      */
     protected $collection;
 
@@ -14,28 +14,23 @@ class Pipeline
      */
     public function __construct(...$input)
     {
-        $this->collection = new Collection(is_array($input[0]) ? $input[0] : $input);
+        $this->collection = new Collection($input);
     }
 
     /**
      * @param string $expression
      * @return Pipeline
      */
-    public function filter(string $expression) : self
+    public function filter(string $expression)
     {
-        list($subject, $operator, $comparedTo) = explode(' ', $expression);
-
+        list($subject, $operator, $compareTo) = explode(' ', $expression);
         foreach ($this->collection as $element) {
-            if (method_exists($method = 'get' . ucfirst($subject), $element)) {
-                $value = $method;
-            } elseif (property_exists($subject, $element)) {
-                $value = $subject;
+            if (method_exists($element, $method = 'get' . ucfirst($subject))) {
+                $result = $this->compare($element->$method(), $operator, $compareTo);
+            } elseif (property_exists($element, $subject)) {
+                $result = $this->compare($element->$subject, $operator, $compareTo);
             }
-            if (isset($value)) {
-                if (!$this->compare($element->$method(), $operator, $comparedTo)) {
-                    $this->collection->remove($element);
-                }
-            }
+            $result ?: $this->collection->remove($element);
         }
         return $this;
     }
@@ -56,10 +51,9 @@ class Pipeline
      * @param mixed $compareTo
      * @return bool
      */
-    private function compare($subject, string $operator, $compareTo)
+    private function compare($subject, string $operator, $compareTo) : bool
     {
-        $compareTo = $compareTo !== 'null' ?: null;
-
+        $compareTo !== 'null' ?: null;
         switch ($operator) {
             case '==':
                 return $subject == $compareTo;
@@ -73,10 +67,10 @@ class Pipeline
     }
 
     /**
-     * @return Collection
+     * @return array
      */
-    public function getCollection()
+    public function getResult() : array
     {
-        return $this->collection;
+        return $this->collection->getContainer();
     }
 }
