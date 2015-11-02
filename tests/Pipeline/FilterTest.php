@@ -8,7 +8,7 @@ class FilterTest extends PipelineTest
 {
     public function testFilter()
     {
-        $expected = $this->authorSort();
+        $expected = $this->createExpected();
         $result = $this->pipedAuthorFilter();
 
         $this->assertEquals($expected, $result);
@@ -29,7 +29,7 @@ class FilterTest extends PipelineTest
     /**
      * @return array
      */
-    private function authorSort()
+    private function createExpected()
     {
         list($author1, $author2) = $this->createAuthors();
         return ["0" => $author2];
