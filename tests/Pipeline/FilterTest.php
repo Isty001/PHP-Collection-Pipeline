@@ -2,8 +2,7 @@
 
 namespace Tests\Pipeline;
 
-use Pipeline\Collection;
-use Pipeline\Pipeline;
+use Pipeline\{Collection, Pipeline};
 
 class FilterTest extends AbstractPipelineTest
 {
