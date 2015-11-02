@@ -8,7 +8,7 @@ class UnionTest extends AbstractPipelineTest
 {
     public function testUnion()
     {
-        $this->assertEquals($this->createAuthors(), $this->authorUnion());
+        $this->assertEquals($this->createAuthors()[0], $this->authorUnion()[0]);
     }
 
     /**
@@ -24,6 +24,7 @@ class UnionTest extends AbstractPipelineTest
             ->distinct('authors_1')
             ->slice('authors_2', 1, 2)
             ->union('authors_1', 'authors_2', 'unified_authors')
+            ->filter('unified_authors.age < 30')
             ->getItemsOf('unified_authors');
     }
 }
