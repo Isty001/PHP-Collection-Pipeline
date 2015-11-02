@@ -4,7 +4,7 @@ namespace Tests\Pipeline;
 
 use Tests\Resources\Author;
 
-abstract class PipelineTest extends \PHPUnit_Framework_TestCase
+abstract class AbstractPipelineTest extends \PHPUnit_Framework_TestCase
 {
     /**
      * @return array

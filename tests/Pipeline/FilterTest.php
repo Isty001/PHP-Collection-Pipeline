@@ -2,28 +2,27 @@
 
 namespace Tests\Pipeline;
 
+use Pipeline\Collection;
 use Pipeline\Pipeline;
 
-class FilterTest extends PipelineTest
+class FilterTest extends AbstractPipelineTest
 {
     public function testFilter()
     {
-        $expected = $this->createExpected();
-        $result = $this->pipedAuthorFilter();
-
-        $this->assertEquals($expected, $result);
+        $this->assertEquals($this->createExpected(), $this->authorFilter());
     }
 
     /**
      * @return array
      */
-    private function pipedAuthorFilter()
+    private function authorFilter()
     {
-        return (new Pipeline($this->createAuthors()))
-            ->filter('name == Hi')
-            ->filter('age > 30')
-            ->take(1)
-            ->getResult();
+        $collection = new Collection('authors', $this->createAuthors());
+
+        return (new Pipeline($collection))
+            ->filter('authors.name == Hi')
+            ->filter('authors.age > 30')
+            ->getItemsOf('authors');
     }
 
     /**
@@ -31,7 +30,7 @@ class FilterTest extends PipelineTest
      */
     private function createExpected()
     {
-        list($author1, $author2) = $this->createAuthors();
-        return ["0" => $author2];
+        list($author1, $author2, $author3) = $this->createAuthors();
+        return [1 => $author2, 2 => $author3];
     }
 }

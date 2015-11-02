@@ -5,16 +5,16 @@ namespace Pipeline;
 class Pipeline
 {
     /**
-     * @var array
+     * @var CollectionStorage
      */
-    protected $collection;
+    protected $collections;
 
     /**
-     * @param ...$input
+     * @param Collection ...$input
      */
-    public function __construct(...$input)
+    public function __construct(Collection...$collections)
     {
-        $this->collection = is_array($input[0]) ? $input[0] : $input;
+        $this->collections = new CollectionStorage($collections);
     }
 
     /**
@@ -24,27 +24,66 @@ class Pipeline
     public function filter(string $expression) : self
     {
         list($subject, $operator, $compareTo) = explode(' ', $expression);
+        list($name, $itemProperty) = explode('.', $subject);
 
-        $this->collection = array_filter($this->collection,
-            function ($element) use ($subject, $operator, $compareTo) {
-                $method = 'get' . ucfirst($subject);
-
-                if (method_exists($element, $method)) {
-                    return $this->compare($element->$method(), $operator, $compareTo);
-                } elseif (property_exists($element, $subject)) {
-                    return $this->compare($element->$subject, $operator, $compareTo);
+        $items = array_filter($this->collections->get($name)->getItems(),
+            function ($item) use ($itemProperty, $operator, $compareTo) {
+                $method = 'get' . $itemProperty;
+                if (method_exists($item, $method)) {
+                    return $this->compare($item->$method(), $operator, $compareTo);
+                } elseif (property_exists($item, $itemProperty)) {
+                    return $this->compare($item->$itemProperty, $operator, $compareTo);
                 }
             });
+        $this->collections->update($name, $items);
+
         return $this;
     }
 
     /**
+     * @param string $name
+     * @param int $offset
      * @param int $length
      * @return Pipeline
      */
-    public function take(int $length) : self
+    public function slice(string $name, int $offset, int $length) : self
     {
-        $this->collection = array_slice($this->collection, 0, $length);
+        $items = array_slice($this->collections->get($name)->getItems(), $offset, $length);
+        $this->collections->update($name, $items);
+
+        return $this;
+    }
+
+    /**
+     * @param string $collectionName
+     * @return Pipeline
+     */
+    public function distinct(string $collectionName) : self
+    {
+        $items = $this->collections->get($collectionName)->getItems();
+        $this->collections->update($collectionName, array_unique($items, SORT_REGULAR));
+
+        return $this;
+    }
+
+    /**
+     * @param string $firstCollectionName
+     * @param string $secondCollectionName
+     * @param string $unifiedName
+     * @return Pipeline
+     */
+    public function union(string $firstCollectionName, string $secondCollectionName, string $unifiedName) : self
+    {
+        $firstCollection = $this->collections->get($firstCollectionName);
+        $secondCollection = $this->collections->get($secondCollectionName);
+
+        $unifiedItems = array_merge($firstCollection->getItems(), $secondCollection->getItems());
+        $unifiedCollection = new Collection($unifiedName, $unifiedItems);
+        $this->collections->add($unifiedCollection);
+
+        $this->collections->remove($firstCollection);
+        $this->collections->remove($secondCollection);
+
         return $this;
     }
 
@@ -70,10 +109,19 @@ class Pipeline
     }
 
     /**
+     * @return CollectionStorage
+     */
+    public function getCollectionStorage() : CollectionStorage
+    {
+        return $this->collections;
+    }
+
+    /**
+     * @param string $name
      * @return array
      */
-    public function getResult() : array
+    public function getItemsOf(string $name)
     {
-        return $this->collection;
+        return $this->collections->get($name)->getItems();
     }
 }
