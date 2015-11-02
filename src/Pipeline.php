@@ -5,7 +5,7 @@ namespace Pipeline;
 class Pipeline
 {
     /**
-     * @var Collection
+     * @var array
      */
     protected $collection;
 
@@ -14,24 +14,27 @@ class Pipeline
      */
     public function __construct(...$input)
     {
-        $this->collection = new Collection($input);
+        $this->collection = is_array($input[0]) ? $input[0] : $input;
     }
 
     /**
      * @param string $expression
      * @return Pipeline
      */
-    public function filter(string $expression)
+    public function filter(string $expression) : self
     {
         list($subject, $operator, $compareTo) = explode(' ', $expression);
-        foreach ($this->collection as $element) {
-            if (method_exists($element, $method = 'get' . ucfirst($subject))) {
-                $result = $this->compare($element->$method(), $operator, $compareTo);
-            } elseif (property_exists($element, $subject)) {
-                $result = $this->compare($element->$subject, $operator, $compareTo);
-            }
-            $result ?: $this->collection->remove($element);
-        }
+
+        $this->collection = array_filter($this->collection,
+            function ($element) use ($subject, $operator, $compareTo) {
+                $method = 'get' . ucfirst($subject);
+
+                if (method_exists($element, $method)) {
+                    return $this->compare($element->$method(), $operator, $compareTo);
+                } elseif (property_exists($element, $subject)) {
+                    return $this->compare($element->$subject, $operator, $compareTo);
+                }
+            });
         return $this;
     }
 
@@ -41,7 +44,7 @@ class Pipeline
      */
     public function take(int $length) : self
     {
-        $this->collection->slice(0, $length);
+        $this->collection = array_slice($this->collection, 0, $length);
         return $this;
     }
 
@@ -71,6 +74,6 @@ class Pipeline
      */
     public function getResult() : array
     {
-        return $this->collection->getContainer();
+        return $this->collection;
     }
 }

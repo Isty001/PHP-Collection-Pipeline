@@ -1,6 +1,6 @@
 {
     "require": {
-        "phpunit/phpunit": "6.0.x-dev"
+        "phpunit/phpunit": "4.8.16"
     },
 
     "autoload" :{

@@ -4,7 +4,7 @@ namespace Tests\Pipeline;
 
 use Tests\Resources\Author;
 
-class PipelineTest extends \PHPUnit_Framework_TestCase
+abstract class PipelineTest extends \PHPUnit_Framework_TestCase
 {
     /**
      * @return array
@@ -19,6 +19,11 @@ class PipelineTest extends \PHPUnit_Framework_TestCase
         $author2->setName('Hi');
         $author2->setAge(34);
 
-        return [$author1, $author2];
+        $author3 = new Author();
+        $author3->setName('Hi');
+        $author3->setAge(34);
+
+
+        return [$author1, $author2, $author3];
     }
 }
