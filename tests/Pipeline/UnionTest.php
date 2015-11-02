@@ -14,7 +14,7 @@ class UnionTest extends AbstractPipelineTest
     /**
      * @return array
      */
-    private function authorUnion()
+    private function authorUnion() : array
     {
         $collection1 = new Collection('authors_1', $this->createAuthors());
         $collection2 = new Collection('authors_2', $this->createAuthors());

@@ -14,7 +14,7 @@ class DistinctTest extends AbstractPipelineTest
     /**
      * @return array
      */
-    private function authorDistinct()
+    private function authorDistinct() : array
     {
         $collection = new Collection('authors', $this->createAuthors());
 
@@ -26,7 +26,7 @@ class DistinctTest extends AbstractPipelineTest
     /**
      * @return array
      */
-    private function createExpected()
+    private function createExpected() : array
     {
         list($author1, $author2) = $this->createAuthors();
         return [$author1, $author2];

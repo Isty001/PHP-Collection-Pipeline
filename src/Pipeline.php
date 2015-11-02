@@ -78,8 +78,7 @@ class Pipeline
         $secondCollection = $this->collections->get($secondCollectionName);
 
         $unifiedItems = array_merge($firstCollection->getItems(), $secondCollection->getItems());
-        $unifiedCollection = new Collection($unifiedName, $unifiedItems);
-        $this->collections->add($unifiedCollection);
+        $this->collections->add(new Collection($unifiedName, $unifiedItems));
 
         $this->collections->remove($firstCollection);
         $this->collections->remove($secondCollection);

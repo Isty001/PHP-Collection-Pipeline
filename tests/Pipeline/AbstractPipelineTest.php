@@ -9,7 +9,7 @@ abstract class AbstractPipelineTest extends \PHPUnit_Framework_TestCase
     /**
      * @return array
      */
-    protected function createAuthors()
+    protected function createAuthors() : array
     {
         $author1 = new Author();
         $author1->setName('Hello');

@@ -14,7 +14,7 @@ class FilterTest extends AbstractPipelineTest
     /**
      * @return array
      */
-    private function authorFilter()
+    private function authorFilter() : array
     {
         $collection = new Collection('authors', $this->createAuthors());
 
@@ -27,7 +27,7 @@ class FilterTest extends AbstractPipelineTest
     /**
      * @return array
      */
-    private function createExpected()
+    private function createExpected() : array
     {
         list($author1, $author2, $author3) = $this->createAuthors();
         return [1 => $author2, 2 => $author3];
