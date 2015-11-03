@@ -24,15 +24,15 @@ class Pipeline
     public function filter(string $expression) : self
     {
         list($subject, $operator, $compareTo) = explode(' ', $expression);
-        list($name, $itemProperty) = explode('.', $subject);
+        list($name, $property) = explode('.', $subject);
 
         $items = array_filter($this->collections->get($name)->getItems(),
-            function ($item) use ($itemProperty, $operator, $compareTo) {
-                $method = 'get' . $itemProperty;
+            function ($item) use ($property, $operator, $compareTo) {
+                $method = 'get' . $property;
                 if (method_exists($item, $method)) {
                     return $this->compare($item->$method(), $operator, $compareTo);
-                } elseif (property_exists($item, $itemProperty)) {
-                    return $this->compare($item->$itemProperty, $operator, $compareTo);
+                } elseif (property_exists($item, $property)) {
+                    return $this->compare($item->$property, $operator, $compareTo);
                 }
             });
         $this->collections->update($name, $items);
