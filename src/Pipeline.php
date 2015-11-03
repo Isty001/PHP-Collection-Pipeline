@@ -55,13 +55,13 @@ class Pipeline
     }
 
     /**
-     * @param string $collectionName
+     * @param string $name
      * @return Pipeline
      */
-    public function distinct(string $collectionName) : self
+    public function distinct(string $name) : self
     {
-        $items = $this->collections->get($collectionName)->getItems();
-        $this->collections->update($collectionName, array_unique($items, SORT_REGULAR));
+        $items = $this->collections->get($name)->getItems();
+        $this->collections->update($name, array_unique($items, SORT_REGULAR));
 
         return $this;
     }

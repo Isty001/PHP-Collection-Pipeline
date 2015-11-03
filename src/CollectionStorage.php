@@ -11,7 +11,7 @@ class CollectionStorage
 
     public function __construct(array $collections)
     {
-        $this->constructCollections($collections);
+        $this->addCollections($collections);
     }
 
     /**
@@ -48,7 +48,7 @@ class CollectionStorage
         return $this->collections[$name];
     }
 
-    private function constructCollections(array $collections)
+    private function addCollections(array $collections)
     {
         $collections = is_array($collections[0]) ? $collections[0] : $collections;
 
