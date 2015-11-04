@@ -19,7 +19,6 @@ class FilterTest extends AbstractPipelineTest
         return (new Pipeline('authors', $this->createAuthors()))
             ->filter('authors.name == Hi')
             ->filter('authors.age > 19')
-            ->select('young', 'authors.age < 19')
             ->take('authors', 1)
             ->get('authors');
     }
