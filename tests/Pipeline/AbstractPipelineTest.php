@@ -21,9 +21,17 @@ abstract class AbstractPipelineTest extends \PHPUnit_Framework_TestCase
 
         $author3 = new Author();
         $author3->setName('Hi');
-        $author3->setAge(34);
+        $author3->setAge(19);
 
 
-        return [$author1, $author2, $author3];
+        $author4 = new Author();
+        $author4->setName('Asd10');
+        $author4->setAge(60);
+
+        $author5 = new Author();
+        $author5->setName('Hi');
+        $author5->setAge(20);
+
+        return [$author1, $author2, $author3, $author4, $author5];
     }
 }

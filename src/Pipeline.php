@@ -5,16 +5,28 @@ namespace Pipeline;
 class Pipeline
 {
     /**
-     * @var CollectionStorage
+     * @var array
      */
-    protected $collections;
+    private $collections;
 
     /**
-     * @param Collection ...$input
+     * @var \Closure[]
      */
-    public function __construct(Collection...$collections)
+    private $pipelineMethods;
+
+    /**
+     * @var string
+     */
+    private $inputName;
+
+    /**
+     * @param string $name
+     * @param array $collectionItems
+     */
+    public function __construct($name, array $collectionItems)
     {
-        $this->collections = new CollectionStorage($collections);
+        $this->inputName = $name;
+        $this->collections[$name] = $collectionItems;
     }
 
     /**
@@ -23,104 +35,91 @@ class Pipeline
      */
     public function filter(string $expression) : self
     {
-        list($subject, $operator, $compareTo) = explode(' ', $expression);
-        list($name, $property) = explode('.', $subject);
+        list($operator, $comparedTo, $collectionName, $property) = $this->parseExpression($expression);
 
-        $items = array_filter($this->collections->get($name)->getItems(),
-            function ($item) use ($property, $operator, $compareTo) {
-                $method = 'get' . $property;
-                if (method_exists($item, $method)) {
-                    return $this->compare($item->$method(), $operator, $compareTo);
-                } elseif (property_exists($item, $property)) {
-                    return $this->compare($item->$property, $operator, $compareTo);
-                }
-            });
-        $this->collections->update($name, $items);
+        $closure = function ($item) use ($property, $operator, $comparedTo, $collectionName) {
+            if (false == $this->compare($item, $property, $operator, $comparedTo)) {
+                $collection = &$this->collections[$collectionName];
+                unset($collection[array_search($item, $collection)]);
+            }
+        };
+        $this->pipelineMethods[] = $closure;
 
         return $this;
     }
 
     /**
-     * @param string $name
-     * @param int $offset
-     * @param int $length
-     * @return Pipeline
+     * @param string $expression
+     * @return array
      */
-    public function slice(string $name, int $offset, int $length) : self
+    private function parseExpression(string $expression)
     {
-        $items = array_slice($this->collections->get($name)->getItems(), $offset, $length);
-        $this->collections->update($name, $items);
+        list($subject, $operator, $comparedTo) = explode(' ', $expression);
+        list($collectionName, $property) = explode('.', $subject);
 
-        return $this;
+        return [$operator, $comparedTo, $collectionName, $property];
     }
 
     /**
-     * @param string $name
-     * @return Pipeline
-     */
-    public function distinct(string $name) : self
-    {
-        $items = $this->collections->get($name)->getItems();
-        $this->collections->update($name, array_unique($items, SORT_REGULAR));
-
-        return $this;
-    }
-
-    /**
-     * @param string $firstCollectionName
-     * @param string $secondCollectionName
-     * @param string $unifiedName
-     * @return Pipeline
-     */
-    public function union(string $firstCollectionName, string $secondCollectionName, string $unifiedName) : self
-    {
-        $firstCollection = $this->collections->get($firstCollectionName);
-        $secondCollection = $this->collections->get($secondCollectionName);
-
-        $unifiedItems = array_merge($firstCollection->getItems(), $secondCollection->getItems());
-        $this->collections->add(new Collection($unifiedName, $unifiedItems));
-
-        $this->collections->remove($firstCollection);
-        $this->collections->remove($secondCollection);
-
-        return $this;
-    }
-
-    /**
-     * @param mixed $subject
+     * @param object $item
+     * @param string $property
      * @param string $operator
-     * @param mixed $compareTo
+     * @param $comparedTo
      * @return bool
      */
-    private function compare($subject, string $operator, $compareTo) : bool
+    private function compare($item, string $property, string $operator, $comparedTo) : bool
     {
-        $compareTo !== 'null' ?: null;
+        $method = 'get' . ucfirst($property);
+        if (method_exists($item, $method)) {
+            $value = $item->$method();
+        } elseif (property_exists(get_class($item), $property) && !isset($value)) {
+            $value = $item->$property;
+        }
         switch ($operator) {
             case '==':
-                return $subject == $compareTo;
+                return $value == $comparedTo;
             case '>':
-                return $subject > $compareTo;
+                return $value > $comparedTo;
             case '<':
-                return $subject < $compareTo;
+                return $value < $comparedTo;
             case '!==':
-                return $subject !== $compareTo;
+                return $value !== $comparedTo;
         }
     }
 
     /**
-     * @return CollectionStorage
+     * @param string $collectionName
+     * @param int $count
+     * @return Pipeline
      */
-    public function getCollectionStorage() : CollectionStorage
+    public function take(string $collectionName, int $count) : self
     {
-        return $this->collections;
+        $closure = function () use ($collectionName, $count) {
+            $this->collections[$collectionName] = array_slice($this->collections[$collectionName], 0, $count);
+        };
+        $this->pipelineMethods[] = $closure;
+
+        return $this;
     }
 
     /**
-     * @param string $name
+     * @param string $collectionName
      * @return array
      */
-    public function getItemsOf(string $name)
+    public function get(string $collectionName) : array
     {
-        return $this->collections->get($name)->getItems();
+        $this->process();
+        return $this->collections[$collectionName];
+    }
+
+    private function process()
+    {
+        for ($i = 0; $i <= count($this->collections[$this->inputName]) + 1; $i++) {
+            foreach ($this->pipelineMethods as $method) {
+                if (isset($this->collections[$this->inputName][$i])) {
+                    call_user_func($method, $this->collections[$this->inputName][$i]);
+                }
+            }
+        }
     }
 }
