@@ -47,6 +47,17 @@ class PipelineTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals([0 => $authors[0], 1 => $authors[1], 2 => $authors[2]], $collection->getItems());
     }
 
+    public function testSort()
+    {
+        $authors = $this->createAuthors();
+        $collection =
+            (new Pipeline(['authors' => $authors]))
+            ->sort('authors.age', 'ASC')
+            ->take('authors');
+
+        $this->assertEquals([$authors[3], $authors[1], $authors[0], $authors[4], $authors[2]], $collection->getItems());
+    }
+
     /**
      * @return array
      */

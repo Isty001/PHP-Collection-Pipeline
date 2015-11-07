@@ -28,10 +28,10 @@ class Pipeline
      */
     public function filter(string $expression) : self
     {
-        list($operator, $comparedTo, $collectionName, $property) = $this->parseExpression($expression);
+        list($operator, $comparedTo, $collectionName, $property) = $this->parseFilterExpression($expression);
 
-        $closure = function () use ($property, $operator, $comparedTo, $collectionName) {
-            $collection = $this->collections[$collectionName];
+        $collection = $this->collections[$collectionName];
+        $closure = function () use ($property, $operator, $comparedTo, $collection) {
             if (is_object($item = $collection->getCurrent())) {
                 if (!$this->compare($item, $property, $operator, $comparedTo)) {
                     $collection->remove($item);
@@ -42,6 +42,58 @@ class Pipeline
         $this->pipelineMethods[] = $closure;
 
         return $this;
+    }
+
+    /**
+     * @param string $expression
+     * @return array
+     */
+    private function parseFilterExpression(string $expression) : array
+    {
+        list($subject, $operator, $comparedTo) = explode(' ', $expression);
+        list($collectionName, $property) = explode('.', $subject);
+
+        return [$operator, $comparedTo, $collectionName, $property];
+    }
+
+    /**
+     * @param object $item
+     * @param string $property
+     * @param string $operator
+     * @param $comparedTo
+     * @return bool
+     */
+    private function compare($item, string $property, string $operator, $comparedTo) : bool
+    {
+        $value = $this->getValue($item, $property);
+        switch ($operator) {
+            case '==':
+                return $value == $comparedTo;
+            case '>':
+                return $value > $comparedTo;
+            case '<':
+                return $value < $comparedTo;
+            case '!==':
+                return $value !== $comparedTo;
+        }
+    }
+
+    /**
+     * @param $item
+     * @param string $property
+     * @return mixed
+     */
+    private function getValue($item, string $property)
+    {
+        $method = 'get' . ucfirst($property);
+        if (method_exists($item, $method)) {
+            $value = $item->$method();
+            return $value;
+        } elseif (property_exists(get_class($item), $property) && !isset($value)) {
+            $value = $item->$property;
+            return $value;
+        }
+        return $value;
     }
 
     /**
@@ -67,56 +119,50 @@ class Pipeline
 
     /**
      * @param string $expression
-     * @return array
+     * @param string $order
+     * @return Pipeline
      */
-    private function parseExpression(string $expression) : array
+    public function sort(string $expression, string $order = 'DESC') : self
     {
-        list($subject, $operator, $comparedTo) = explode(' ', $expression);
-        list($collectionName, $property) = explode('.', $subject);
+        list($collectionName, $property) = explode('.', $expression);
 
-        return [$operator, $comparedTo, $collectionName, $property];
-    }
+        $collection = $this->collections[$collectionName];
+        $items = $collection->getItems();
 
-    /**
-     * @param object $item
-     * @param string $property
-     * @param string $operator
-     * @param $comparedTo
-     * @return bool
-     */
-    private function compare($item, string $property, string $operator, $comparedTo) : bool
-    {
-        $method = 'get' . ucfirst($property);
-        if (method_exists($item, $method)) {
-            $value = $item->$method();
-        } elseif (property_exists(get_class($item), $property) && !isset($value)) {
-            $value = $item->$property;
-        }
-        switch ($operator) {
-            case '==':
-                return $value == $comparedTo;
-            case '>':
-                return $value > $comparedTo;
-            case '<':
-                return $value < $comparedTo;
-            case '!==':
-                return $value !== $comparedTo;
-        }
+        usort($items, function($a, $b) use ($property, $order){
+            if($this->getValue($a, $property) == $this->getValue($b, $property)){
+                return 0;
+            }
+            if($order == 'DESC'){
+                return $this->getValue($a, $property) < $this->getValue($b, $property) ? -1 : 1;
+            } elseif ($order == 'ASC'){
+                return $this->getValue($a, $property) > $this->getValue($b, $property) ? -1 : 1;
+            }
+        });
+        $collection->setItems($items);
+
+        return $this;
     }
 
     /**
      * @param string $collectionName
      * @param int $count
-     * @return Pipeline
+     * @return Pipeline|array
      */
-    public function take(string $collectionName, int $count = null) : Collection
+    public function take(string $collectionName = null, int $count = null)
     {
-        $this->process();
+        empty($this->pipelineMethods) ?: $this->process();
+        if(is_null($collectionName) && is_null($count)){
+            return $this->collections;
+        }
+
         $collection = $this->collections[$collectionName];
-        if (!is_null($count)) {
+
+        if (!is_null($count) && !is_null($count)) {
             $slicedItems = array_slice($collection->getItems(), 0, $count);
             return $collection->setItems($slicedItems);
         }
+
         return $collection;
     }
 
