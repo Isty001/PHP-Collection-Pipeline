@@ -5,7 +5,7 @@ namespace Pipeline;
 class Pipeline
 {
     /**
-     * @var array
+     * @var Collection[]
      */
     private $collections;
 
@@ -15,18 +15,11 @@ class Pipeline
     private $pipelineMethods;
 
     /**
-     * @var string
+     * @param array $collections
      */
-    private $inputName;
-
-    /**
-     * @param string $name
-     * @param array $collectionItems
-     */
-    public function __construct($name, array $collectionItems)
+    public function __construct(array $collections)
     {
-        $this->inputName = $name;
-        $this->collections[$name] = $collectionItems;
+        $this->addCollections($collections);
     }
 
     /**
@@ -37,10 +30,13 @@ class Pipeline
     {
         list($operator, $comparedTo, $collectionName, $property) = $this->parseExpression($expression);
 
-        $closure = function ($item) use ($property, $operator, $comparedTo, $collectionName) {
-            if (false == $this->compare($item, $property, $operator, $comparedTo)) {
-                $collection = &$this->collections[$collectionName];
-                unset($collection[array_search($item, $collection)]);
+        $closure = function () use ($property, $operator, $comparedTo, $collectionName) {
+            $collection = $this->collections[$collectionName];
+            if (is_object($item = $collection->getCurrent())) {
+                if (!$this->compare($item, $property, $operator, $comparedTo)) {
+                    $collection->remove($item);
+                    return false;
+                }
             }
         };
         $this->pipelineMethods[] = $closure;
@@ -48,11 +44,16 @@ class Pipeline
         return $this;
     }
 
+    public function select(string $expression) : self
+    {
+
+    }
+
     /**
      * @param string $expression
      * @return array
      */
-    private function parseExpression(string $expression)
+    private function parseExpression(string $expression) : array
     {
         list($subject, $operator, $comparedTo) = explode(' ', $expression);
         list($collectionName, $property) = explode('.', $subject);
@@ -92,34 +93,40 @@ class Pipeline
      * @param int $count
      * @return Pipeline
      */
-    public function take(string $collectionName, int $count) : self
-    {
-        $closure = function () use ($collectionName, $count) {
-            $this->collections[$collectionName] = array_slice($this->collections[$collectionName], 0, $count);
-        };
-        $this->pipelineMethods[] = $closure;
-
-        return $this;
-    }
-
-    /**
-     * @param string $collectionName
-     * @return array
-     */
-    public function get(string $collectionName) : array
+    public function take(string $collectionName, int $count = null) : Collection
     {
         $this->process();
+        if (!is_null($count)) {
+            return array_slice($this->collections[$collectionName]->getItems(), 0, $count);
+        }
         return $this->collections[$collectionName];
     }
 
     private function process()
     {
-        for ($i = 0; $i <= count($this->collections[$this->inputName]) + 1; $i++) {
-            foreach ($this->pipelineMethods as $method) {
-                if (isset($this->collections[$this->inputName][$i])) {
-                    call_user_func($method, $this->collections[$this->inputName][$i]);
-                }
+        Logger::add('ada');
+        while (true) {
+            foreach ($this->pipelineMethods as $key => $closure) {
+                call_user_func($closure);
             }
+            $result = null;
+            foreach ($this->collections as $collection) {
+                $result[] = $collection->isFinished();
+                $collection->next();
+            }
+            if (count(array_unique($result)) == 1 && $result[0]) {
+                break;
+            }
+        }
+    }
+
+    /**
+     * @param array $collections
+     */
+    private function addCollections(array $collections)
+    {
+        foreach ($collections as $name => $items) {
+            $this->collections[$name] = new Collection($items);
         }
     }
 }
