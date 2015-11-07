@@ -49,7 +49,7 @@ class Pipeline
      * @param callable $callback
      * @return Pipeline
      */
-    public function sort(string $collectionName, Callable $callback) : self
+    public function filterCallback(string $collectionName, Callable $callback) : self
     {
         $collection = $this->collections[$collectionName];
         $closure = function() use ($callback, $collection){

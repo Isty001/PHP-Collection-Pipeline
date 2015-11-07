@@ -31,12 +31,12 @@ class PipelineTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals([0 => $authors[0], 3 => $authors[3]], $value->getItems());
     }
 
-    public function testSort()
+    public function testFilterCallback()
     {
         $authors = $this->createAuthors();
         $collection =
             (new Pipeline(['authors' => $this->createAuthors()]))
-            ->sort('authors', function(Author $item){
+            ->filterCallback('authors', function(Author $item){
                 if($item->getName() == 'Asd10'){
                     return false;
                 }
