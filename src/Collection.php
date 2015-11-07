@@ -55,7 +55,10 @@ class Collection
      */
     public function isFinished()
     {
-        return $this->currentKey == array_search(end($this->items), $this->items);
+        if (!next($this->items)) {
+            return true;
+        }
+        return false;
     }
 
     /**

@@ -104,15 +104,16 @@ class Pipeline
 
     private function process()
     {
-        Logger::add('ada');
         while (true) {
             foreach ($this->pipelineMethods as $key => $closure) {
                 call_user_func($closure);
             }
             $result = null;
             foreach ($this->collections as $collection) {
-                $result[] = $collection->isFinished();
-                $collection->next();
+                $finished = $collection->isFinished();
+                if(!$result[] = $finished){
+                    $collection->next();
+                }
             }
             if (count(array_unique($result)) == 1 && $result[0]) {
                 break;

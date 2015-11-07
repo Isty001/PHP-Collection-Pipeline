@@ -7,7 +7,7 @@ use Tests\Resources\Author;
 
 class PipelineTest extends \PHPUnit_Framework_TestCase
 {
-    public function AtestFilter()
+    public function atestFilter()
     {
         $authors = $this->createAuthors();
         $value = (new Pipeline(['authors' => $authors]))
