@@ -19,9 +19,15 @@ class Collection
      */
     private $currentKey = 0;
 
+    /**
+     * @var int
+     */
+    private $end;
+
     public function __construct(array $items)
     {
         $this->items = $items;
+        $this->end = count($items);
     }
 
     /**
@@ -29,11 +35,17 @@ class Collection
      */
     public function getCurrent()
     {
-        return !array_key_exists($this->currentKey, $this->items) ?: $this->items[$this->currentKey];
+        if(array_key_exists($this->currentKey, $this->items)){
+            return $this->items[$this->currentKey];
+        }
     }
 
     public function next()
     {
+        if($this->currentKey == $this->end){
+            $this->finished = true;
+            return;
+        }
         $this->currentKey++;
     }
 
@@ -45,27 +57,22 @@ class Collection
         return $this->items;
     }
 
+    public function setItems(array $item) : self
+    {
+        $this->items = $item;
+        return $this;
+    }
+
     public function remove($item)
     {
         unset($this->items[array_search($item, $this->items)]);
     }
 
     /**
-     * @return boolean
+     * @return bool
      */
-    public function isFinished()
+    public function isFinished() : bool
     {
-        if (!next($this->items)) {
-            return true;
-        }
-        return false;
-    }
-
-    /**
-     * @param boolean $finished
-     */
-    public function setFinished(bool $finished)
-    {
-        $this->finished = $finished;
+        return $this->finished;
     }
 }

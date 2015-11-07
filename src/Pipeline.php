@@ -44,9 +44,25 @@ class Pipeline
         return $this;
     }
 
-    public function select(string $expression) : self
+    /**
+     * @param string $collectionName
+     * @param callable $callback
+     * @return Pipeline
+     */
+    public function sort(string $collectionName, Callable $callback) : self
     {
+        $collection = $this->collections[$collectionName];
+        $closure = function() use ($callback, $collection){
+            if(is_object($item = $collection->getCurrent())){
+                $result = call_user_func($callback, $item);
+                if(!$result){
+                    $collection->remove($item);
+                }
+            }
+        };
+        $this->pipelineMethods[] = $closure;
 
+        return $this;
     }
 
     /**
@@ -96,10 +112,12 @@ class Pipeline
     public function take(string $collectionName, int $count = null) : Collection
     {
         $this->process();
+        $collection = $this->collections[$collectionName];
         if (!is_null($count)) {
-            return array_slice($this->collections[$collectionName]->getItems(), 0, $count);
+            $slicedItems = array_slice($collection->getItems(), 0, $count);
+            return $collection->setItems($slicedItems);
         }
-        return $this->collections[$collectionName];
+        return $collection;
     }
 
     private function process()

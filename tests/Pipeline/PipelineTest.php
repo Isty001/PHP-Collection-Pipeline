@@ -7,10 +7,12 @@ use Tests\Resources\Author;
 
 class PipelineTest extends \PHPUnit_Framework_TestCase
 {
-    public function atestFilter()
+
+    public function testFilter()
     {
         $authors = $this->createAuthors();
-        $value = (new Pipeline(['authors' => $authors]))
+        $value =
+            (new Pipeline(['authors' => $authors]))
             ->filter('authors.name == Hi')
             ->filter('authors.age > 19')
             ->take('authors');
@@ -21,7 +23,8 @@ class PipelineTest extends \PHPUnit_Framework_TestCase
     public function testNegativeExpression()
     {
         $authors = $this->createAuthors();
-        $value = (new Pipeline(['authors' => $authors]))
+        $value =
+            (new Pipeline(['authors' => $authors]))
             ->filter('authors.name !== Hi')
             ->take('authors');
 
@@ -30,11 +33,18 @@ class PipelineTest extends \PHPUnit_Framework_TestCase
 
     public function testSort()
     {
-//        $value = (new Pipeline(['authors' => $this->createAuthors()]))
-//            ->sort(function(){
-//
-//            })
-//            ->take('authors', 2);
+        $authors = $this->createAuthors();
+        $collection =
+            (new Pipeline(['authors' => $this->createAuthors()]))
+            ->sort('authors', function(Author $item){
+                if($item->getName() == 'Asd10'){
+                    return false;
+                }
+                return true;
+            })
+            ->take('authors', 3);
+
+        $this->assertEquals([0 => $authors[0], 1 => $authors[1], 2 => $authors[2]], $collection->getItems());
     }
 
     /**
