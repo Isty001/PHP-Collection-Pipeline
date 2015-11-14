@@ -2,7 +2,7 @@
 
 namespace Tests\Pipeline;
 
-use Pipeline\Options;
+use Pipeline\Option;
 use Pipeline\Pipeline;
 use Tests\Resources\Author;
 
@@ -29,13 +29,14 @@ class PipelineTest extends \PHPUnit_Framework_TestCase
             ->filter('authors.name !== Hi')
             ->take('authors');
 
-        $this->assertEquals([0 => $authors[0], 3 => $authors[3]], $result);
+        $this->assertEquals([0 => $authors[0], 3 => $authors[3], 5 => $authors[5]], $result);
     }
 
     public function testFilterCallback()
     {
         $expected = $this->createAuthors();
         unset($expected[3]);
+        unset($expected[5]);
 
         $collection =
             (new Pipeline(['expected' => $this->createAuthors()]))
@@ -55,12 +56,24 @@ class PipelineTest extends \PHPUnit_Framework_TestCase
         $authors = $this->createAuthors();
         $result =
             (new Pipeline(['authors' => $authors]))
-            ->sort('authors.age', Options::ASC)
+            ->sort('authors.age', Option::ASC)
             ->take('authors');
 
-        $this->assertEquals([$authors[3], $authors[1], $authors[0], $authors[4], $authors[2]], $result);
+        $this->assertEquals([$authors[3], $authors[5], $authors[1], $authors[0], $authors[4], $authors[2]], $result);
     }
 
+    public function testUnique()
+    {
+        $authors = $this->createAuthors();
+        unset($authors[5]);
+
+        $result =
+            (new Pipeline(['authors' => $authors]))
+            ->unique('authors')
+            ->take('authors');
+
+        $this->assertEquals($authors, $result);
+    }
     /**
      * @return array
      */
@@ -86,6 +99,10 @@ class PipelineTest extends \PHPUnit_Framework_TestCase
         $author4->setName('Hi');
         $author4->setAge(20);
 
-        return [$author0, $author1, $author2, $author3, $author4];
+        $author5 = new Author();
+        $author5->setName('Asd10');
+        $author5->setAge(60);
+
+        return [$author0, $author1, $author2, $author3, $author4, $author5];
     }
 }

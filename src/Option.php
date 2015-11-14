@@ -2,7 +2,7 @@
 
 namespace Pipeline;
 
-class Options
+class Option
 {
     const DESC = 'DESC';
     const ASC = 'ASC';

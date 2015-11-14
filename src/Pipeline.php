@@ -12,7 +12,12 @@ class Pipeline
     /**
      * @var \Closure[]
      */
-    private $closures;
+    private $loopedClosures = [];
+
+    /**
+     * @var \Closure[]
+     */
+    private $finalClosures = [];
 
     /**
      * @var bool
@@ -44,7 +49,28 @@ class Pipeline
                 }
             }
         };
-        $this->closures[] = $closure;
+        $this->loopedClosures[] = $closure;
+
+        return $this;
+    }
+
+    /**
+     * @param string $collectionName
+     * @param callable $callback
+     * @return Pipeline
+     */
+    public function filterCallback($collectionName, Callable $callback)
+    {
+        $collection = $this->collections[$collectionName];
+        $closure = function() use ($callback, $collection){
+            if(is_object($item = $collection->getCurrent())){
+                $result = call_user_func($callback, $item);
+                if(!$result){
+                    $collection->remove($item);
+                }
+            }
+        };
+        $this->loopedClosures[] = $closure;
 
         return $this;
     }
@@ -86,33 +112,6 @@ class Pipeline
     }
 
     /**
-     * @param string $expression
-     * @param string $order
-     * @return Pipeline
-     */
-    public function sort($expression, $order = Options::DESC)
-    {
-        list($collectionName, $property) = explode('.', $expression);
-
-        $collection = $this->collections[$collectionName];
-        $items = $collection->getItems();
-
-        usort($items, function($a, $b) use ($property, $order){
-            if($this->getValue($a, $property) == $this->getValue($b, $property)){
-                return 0;
-            }
-            if($order == Options::DESC){
-                return $this->compare($a, $property, '<', $b) ? -1 : 1;
-            } elseif ($order == Options::ASC){
-                return $this->compare($a, $property, '>', $b) ? -1 : 1;
-            }
-        });
-        $collection->setItems($items);
-
-        return $this;
-    }
-
-    /**
      * @param string $item
      * @param string $property
      * @return mixed
@@ -131,22 +130,42 @@ class Pipeline
     }
 
     /**
-     * @param string $collectionName
-     * @param callable $callback
+     * @param string $expression
+     * @param string $order
      * @return Pipeline
      */
-    public function filterCallback($collectionName, Callable $callback)
+    public function sort($expression, $order = Option::DESC)
+    {
+        list($collectionName, $property) = explode('.', $expression);
+        $collection = $this->collections[$collectionName];
+
+        $closure = function() use ($property, $order, $collection){
+            $items = $collection->getItems();
+            usort($items, function($a, $b) use ($property, $order){
+                if($this->getValue($a, $property) == $this->getValue($b, $property)){
+                    return 0;
+                }
+                if($order == Option::DESC){
+                    return $this->compare($a, $property, '<', $b) ? -1 : 1;
+                } elseif ($order == Option::ASC){
+                    return $this->compare($a, $property, '>', $b) ? -1 : 1;
+                }
+            });
+            $collection->setItems($items);
+        };
+        $this->finalClosures[] = $closure;
+
+        return $this;
+    }
+
+    /**
+     * @param string $collectionName
+     * @return $this
+     */
+    public function unique($collectionName)
     {
         $collection = $this->collections[$collectionName];
-        $closure = function() use ($callback, $collection){
-            if(is_object($item = $collection->getCurrent())){
-                $result = call_user_func($callback, $item);
-                if(!$result){
-                    $collection->remove($item);
-                }
-            }
-        };
-        $this->closures[] = $closure;
+        $collection->setItems(array_unique($collection->getItems(), SORT_REGULAR));
 
         return $this;
     }
@@ -158,7 +177,8 @@ class Pipeline
      */
     public function take($collectionName, $count = null)
     {
-        empty($this->closures) ?: $this->process();
+        $this->process();
+
         $collectionItems = $this->collections[$collectionName]->getItems();
         if(!is_null($count)){
             array_slice($collectionItems, 0, $count);
@@ -172,8 +192,8 @@ class Pipeline
             return;
         }
         while (true) {
-            foreach ($this->closures as $key => $closure) {
-                call_user_func($closure);
+            foreach ($this->loopedClosures as $loopedClosure) {
+                call_user_func($loopedClosure);
             }
             $result = null;
             foreach ($this->collections as $collection) {
@@ -185,6 +205,9 @@ class Pipeline
             if (count(array_unique($result)) == 1 && $result[0]) {
                 break;
             }
+        }
+        foreach ($this->finalClosures as $finalClosure) {
+            call_user_func($finalClosure);
         }
     }
 
