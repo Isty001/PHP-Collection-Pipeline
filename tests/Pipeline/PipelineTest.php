@@ -11,51 +11,53 @@ class PipelineTest extends \PHPUnit_Framework_TestCase
     public function testFilter()
     {
         $authors = $this->createAuthors();
-        $value =
+        $result =
             (new Pipeline(['authors' => $authors]))
             ->filter('authors.name == Hi')
             ->filter('authors.age > 19')
             ->take('authors');
 
-        $this->assertEquals([1 => $authors[1], 4 => $authors[4]], $value->getItems());
+        $this->assertEquals([1 => $authors[1], 4 => $authors[4]], $result);
     }
 
     public function testNegativeExpression()
     {
         $authors = $this->createAuthors();
-        $value =
+        $result =
             (new Pipeline(['authors' => $authors]))
             ->filter('authors.name !== Hi')
             ->take('authors');
 
-        $this->assertEquals([0 => $authors[0], 3 => $authors[3]], $value->getItems());
+        $this->assertEquals([0 => $authors[0], 3 => $authors[3]], $result);
     }
 
     public function testFilterCallback()
     {
-        $authors = $this->createAuthors();
+        $expected = $this->createAuthors();
+        unset($expected[3]);
+
         $collection =
-            (new Pipeline(['authors' => $this->createAuthors()]))
-            ->filterCallback('authors', function(Author $item){
+            (new Pipeline(['expected' => $this->createAuthors()]))
+            ->filterCallback('expected', function(Author $item){
                 if($item->getName() == 'Asd10'){
                     return false;
                 }
                 return true;
-            })
-            ->take('authors', 3);
+            });
+            $result = $collection->take('expected', 3);
 
-        $this->assertEquals([0 => $authors[0], 1 => $authors[1], 2 => $authors[2]], $collection->getItems());
+        $this->assertEquals($expected, $result);
     }
 
     public function testSort()
     {
         $authors = $this->createAuthors();
-        $collection =
+        $result =
             (new Pipeline(['authors' => $authors]))
             ->sort('authors.age', 'ASC')
             ->take('authors');
 
-        $this->assertEquals([$authors[3], $authors[1], $authors[0], $authors[4], $authors[2]], $collection->getItems());
+        $this->assertEquals([$authors[3], $authors[1], $authors[0], $authors[4], $authors[2]], $result);
     }
 
     /**

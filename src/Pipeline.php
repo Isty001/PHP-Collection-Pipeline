@@ -15,6 +15,11 @@ class Pipeline
     private $pipelineMethods;
 
     /**
+     * @var bool
+     */
+    private $processed;
+
+    /**
      * @param array $collections
      */
     public function __construct(array $collections)
@@ -83,7 +88,7 @@ class Pipeline
      * @param string $property
      * @return mixed
      */
-    private function getValue($item, string $property)
+    private function getValue($item, $property)
     {
         $method = 'get' . ucfirst($property);
         if (method_exists($item, $method)) {
@@ -147,27 +152,23 @@ class Pipeline
     /**
      * @param string $collectionName
      * @param int $count
-     * @return Pipeline|array
+     * @return array
      */
-    public function take($collectionName = null, $count = null)
+    public function take($collectionName, $count = null)
     {
         empty($this->pipelineMethods) ?: $this->process();
-        if(is_null($collectionName) && is_null($count)){
-            return $this->collections;
+        $collectionItems = $this->collections[$collectionName]->getItems();
+        if(!is_null($count)){
+            array_slice($collectionItems, 0, $count);
         }
-
-        $collection = $this->collections[$collectionName];
-
-        if (!is_null($count) && !is_null($count)) {
-            $slicedItems = array_slice($collection->getItems(), 0, $count);
-            return $collection->setItems($slicedItems);
-        }
-
-        return $collection;
+        return $collectionItems;
     }
 
     private function process()
     {
+        if($this->processed){
+            return;
+        }
         while (true) {
             foreach ($this->pipelineMethods as $key => $closure) {
                 call_user_func($closure);
