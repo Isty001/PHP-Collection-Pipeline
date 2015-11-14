@@ -12,7 +12,7 @@ class Pipeline
     /**
      * @var \Closure[]
      */
-    private $pipelineMethods;
+    private $closures;
 
     /**
      * @var bool
@@ -44,7 +44,7 @@ class Pipeline
                 }
             }
         };
-        $this->pipelineMethods[] = $closure;
+        $this->closures[] = $closure;
 
         return $this;
     }
@@ -62,29 +62,58 @@ class Pipeline
     }
 
     /**
-     * @param object $item
+     * @param object $subject
      * @param string $property
      * @param string $operator
      * @param $comparedTo
      * @return bool
      */
-    private function compare($item, $property, $operator, $comparedTo)
+    private function compare($subject, $property, $operator, $comparedTo)
     {
-        $value = $this->getValue($item, $property);
+        $subjectValue = $this->getValue($subject, $property);
+        $compareValue = is_object($comparedTo) ? $this->getValue($comparedTo, $property) : $comparedTo;
+
         switch ($operator) {
             case '==':
-                return $value == $comparedTo;
+                return $subjectValue == $compareValue;
             case '>':
-                return $value > $comparedTo;
+                return $subjectValue > $compareValue;
             case '<':
-                return $value < $comparedTo;
+                return $subjectValue < $compareValue;
             case '!==':
-                return $value !== $comparedTo;
+                return $subjectValue !== $compareValue;
         }
     }
 
     /**
-     * @param $item
+     * @param string $expression
+     * @param string $order
+     * @return Pipeline
+     */
+    public function sort($expression, $order = Options::DESC)
+    {
+        list($collectionName, $property) = explode('.', $expression);
+
+        $collection = $this->collections[$collectionName];
+        $items = $collection->getItems();
+
+        usort($items, function($a, $b) use ($property, $order){
+            if($this->getValue($a, $property) == $this->getValue($b, $property)){
+                return 0;
+            }
+            if($order == Options::DESC){
+                return $this->compare($a, $property, '<', $b) ? -1 : 1;
+            } elseif ($order == Options::ASC){
+                return $this->compare($a, $property, '>', $b) ? -1 : 1;
+            }
+        });
+        $collection->setItems($items);
+
+        return $this;
+    }
+
+    /**
+     * @param string $item
      * @param string $property
      * @return mixed
      */
@@ -117,34 +146,7 @@ class Pipeline
                 }
             }
         };
-        $this->pipelineMethods[] = $closure;
-
-        return $this;
-    }
-
-    /**
-     * @param string $expression
-     * @param string $order
-     * @return Pipeline
-     */
-    public function sort($expression, $order = 'DESC')
-    {
-        list($collectionName, $property) = explode('.', $expression);
-
-        $collection = $this->collections[$collectionName];
-        $items = $collection->getItems();
-
-        usort($items, function($a, $b) use ($property, $order){
-            if($this->getValue($a, $property) == $this->getValue($b, $property)){
-                return 0;
-            }
-            if($order == 'DESC'){
-                return $this->getValue($a, $property) < $this->getValue($b, $property) ? -1 : 1;
-            } elseif ($order == 'ASC'){
-                return $this->getValue($a, $property) > $this->getValue($b, $property) ? -1 : 1;
-            }
-        });
-        $collection->setItems($items);
+        $this->closures[] = $closure;
 
         return $this;
     }
@@ -156,7 +158,7 @@ class Pipeline
      */
     public function take($collectionName, $count = null)
     {
-        empty($this->pipelineMethods) ?: $this->process();
+        empty($this->closures) ?: $this->process();
         $collectionItems = $this->collections[$collectionName]->getItems();
         if(!is_null($count)){
             array_slice($collectionItems, 0, $count);
@@ -170,7 +172,7 @@ class Pipeline
             return;
         }
         while (true) {
-            foreach ($this->pipelineMethods as $key => $closure) {
+            foreach ($this->closures as $key => $closure) {
                 call_user_func($closure);
             }
             $result = null;

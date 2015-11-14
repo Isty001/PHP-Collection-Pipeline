@@ -2,6 +2,7 @@
 
 namespace Tests\Pipeline;
 
+use Pipeline\Options;
 use Pipeline\Pipeline;
 use Tests\Resources\Author;
 
@@ -54,7 +55,7 @@ class PipelineTest extends \PHPUnit_Framework_TestCase
         $authors = $this->createAuthors();
         $result =
             (new Pipeline(['authors' => $authors]))
-            ->sort('authors.age', 'ASC')
+            ->sort('authors.age', Options::ASC)
             ->take('authors');
 
         $this->assertEquals([$authors[3], $authors[1], $authors[0], $authors[4], $authors[2]], $result);
