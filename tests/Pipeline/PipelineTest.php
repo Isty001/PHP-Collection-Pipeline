@@ -61,7 +61,7 @@ class PipelineTest extends \PHPUnit_Framework_TestCase
     /**
      * @return array
      */
-    private function createAuthors() : array
+    private function createAuthors()
     {
         $author0 = new Author();
         $author0->setName('Hello');

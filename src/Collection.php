@@ -52,12 +52,12 @@ class Collection
     /**
      * @return array
      */
-    public function getItems() : array
+    public function getItems()
     {
         return $this->items;
     }
 
-    public function setItems(array $item) : self
+    public function setItems(array $item)
     {
         $this->items = $item;
         return $this;
@@ -71,7 +71,7 @@ class Collection
     /**
      * @return bool
      */
-    public function isFinished() : bool
+    public function isFinished()
     {
         return $this->finished;
     }

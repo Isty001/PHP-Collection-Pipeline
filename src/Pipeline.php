@@ -26,7 +26,7 @@ class Pipeline
      * @param string $expression
      * @return Pipeline
      */
-    public function filter(string $expression) : self
+    public function filter($expression)
     {
         list($operator, $comparedTo, $collectionName, $property) = $this->parseFilterExpression($expression);
 
@@ -48,7 +48,7 @@ class Pipeline
      * @param string $expression
      * @return array
      */
-    private function parseFilterExpression(string $expression) : array
+    private function parseFilterExpression($expression)
     {
         list($subject, $operator, $comparedTo) = explode(' ', $expression);
         list($collectionName, $property) = explode('.', $subject);
@@ -63,7 +63,7 @@ class Pipeline
      * @param $comparedTo
      * @return bool
      */
-    private function compare($item, string $property, string $operator, $comparedTo) : bool
+    private function compare($item, $property, $operator, $comparedTo)
     {
         $value = $this->getValue($item, $property);
         switch ($operator) {
@@ -101,7 +101,7 @@ class Pipeline
      * @param callable $callback
      * @return Pipeline
      */
-    public function filterCallback(string $collectionName, Callable $callback) : self
+    public function filterCallback($collectionName, Callable $callback)
     {
         $collection = $this->collections[$collectionName];
         $closure = function() use ($callback, $collection){
@@ -122,7 +122,7 @@ class Pipeline
      * @param string $order
      * @return Pipeline
      */
-    public function sort(string $expression, string $order = 'DESC') : self
+    public function sort($expression, $order = 'DESC')
     {
         list($collectionName, $property) = explode('.', $expression);
 
@@ -149,7 +149,7 @@ class Pipeline
      * @param int $count
      * @return Pipeline|array
      */
-    public function take(string $collectionName = null, int $count = null)
+    public function take($collectionName = null, $count = null)
     {
         empty($this->pipelineMethods) ?: $this->process();
         if(is_null($collectionName) && is_null($count)){

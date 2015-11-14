@@ -15,7 +15,7 @@ class Author
     private $age;
 
     /**
-     * @return mixed
+     * @return string
      */
     public function getName()
     {
@@ -23,7 +23,7 @@ class Author
     }
 
     /**
-     * @param mixed $name
+     * @param string $name
      */
     public function setName($name)
     {
@@ -31,7 +31,7 @@ class Author
     }
 
     /**
-     * @return mixed
+     * @return int
      */
     public function getAge()
     {
@@ -39,7 +39,7 @@ class Author
     }
 
     /**
-     * @param mixed $age
+     * @param int $age
      */
     public function setAge($age)
     {
