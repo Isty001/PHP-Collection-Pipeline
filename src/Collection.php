@@ -24,7 +24,7 @@ class Collection
      */
     private $end;
 
-    public function __construct(array $items = null)
+    public function __construct(array $items = [])
     {
         $this->items = $items;
         $this->end = count($items);
@@ -42,11 +42,10 @@ class Collection
 
     public function next()
     {
-        if($this->currentKey == $this->end){
+        if($this->currentKey++ == $this->end){
             $this->finished = true;
             return;
         }
-        $this->currentKey++;
     }
 
     /**
@@ -68,7 +67,9 @@ class Collection
      */
     public function addItem($item)
     {
-        $this->items[] = $item;
+        if(!array_search($item, $this->items)){
+            $this->items[] = $item;
+        }
     }
 
     public function remove($item)
@@ -82,5 +83,10 @@ class Collection
     public function isFinished()
     {
         return $this->finished;
+    }
+
+    public function setCurrent($item)
+    {
+        $this->currentKey = array_search($item, $this->items);
     }
 }

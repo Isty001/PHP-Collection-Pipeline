@@ -7,7 +7,6 @@ use Tests\Resources\Author;
 
 class PipelineTest extends \PHPUnit_Framework_TestCase
 {
-
     public function testFilter()
     {
         $authors = $this->createAuthors();
@@ -40,7 +39,7 @@ class PipelineTest extends \PHPUnit_Framework_TestCase
         $collection =
             (new Pipeline(['expected' => $this->createAuthors()]))
             ->filterCallback('expected', function(Author $item){
-                if($item->getName() == 'Asd10'){
+                if($item->getName() == 'Asd10' || $item->getName() == 'Asd999'){
                     return false;
                 }
                 return true;
@@ -85,6 +84,19 @@ class PipelineTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals([0 => $authors[1], 1 => $authors[3], 2 => $authors[5]], $result);
     }
 
+    public function testUnion()
+    {
+        $authors = $this->createAuthors();
+        $result =
+            (new Pipeline(['authors1' => $authors, 'authors2' => $authors]))
+            ->select('authors1.name == Hello', 'HelloAuth')
+            ->select('authors2.age == 60', 'OldAuth')
+            ->union('HelloAuth', 'OldAuth', 'MergedAuth')
+            ->take('MergedAuth');
+
+        $this->assertEquals([$authors[0], $authors[3], $authors[5]], $result);
+    }
+
     /**
      * @return array
      */
@@ -103,7 +115,7 @@ class PipelineTest extends \PHPUnit_Framework_TestCase
         $author2->setAge(19);
 
         $author3 = new Author();
-        $author3->setName('Asd10');
+        $author3->setName('Asd999');
         $author3->setAge(60);
 
         $author4 = new Author();

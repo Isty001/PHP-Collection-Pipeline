@@ -97,6 +97,9 @@ class PipelineProcessor
         return $value;
     }
 
+    /**
+     * Data Processing
+     */
     protected function process()
     {
         while (true) {
@@ -104,9 +107,8 @@ class PipelineProcessor
                 call_user_func($loopedClosure);
             }
             $result = null;
-            foreach ($this->collections as $collection) {
-                $finished = $collection->isFinished();
-                if(!$result[] = $finished){
+            foreach ($this->collections as $key => $collection) {
+                if (!$result[] = $collection->isFinished()) {
                     $collection->next();
                 }
             }

@@ -33,10 +33,10 @@ class Pipeline extends PipelineProcessor
     public function filterCallback($collectionName, callable $callback)
     {
         $collection = $this->collections[$collectionName];
-        $closure = function() use ($callback, $collection){
-            if(is_object($item = $collection->getCurrent())){
+        $closure = function () use ($callback, $collection) {
+            if (is_object($item = $collection->getCurrent())) {
                 $result = call_user_func($callback, $item);
-                if(!$result){
+                if (!$result) {
                     $collection->remove($item);
                 }
             }
@@ -59,12 +59,36 @@ class Pipeline extends PipelineProcessor
         $newCollection = new Collection();
         $this->collections[$newCollectionName] = $newCollection;
 
-        $closure = function() use ($expression, $checkedCollection, $newCollection) {
-            if(is_object($item = $checkedCollection->getCurrent())){
-                if($this->compareExpression($item, $expression)){
+        $closure = function () use ($expression, $checkedCollection, $newCollection) {
+            if (is_object($item = $checkedCollection->getCurrent())) {
+                if ($this->compareExpression($item, $expression)) {
                     $newCollection->addItem($item);
+                    $newCollection->setCurrent($item);
                 }
             }
+        };
+        $this->loopedClosures[] = $closure;
+
+        return $this;
+    }
+
+    /**
+     * @param string $firstName
+     * @param string $secondName
+     * @param string $newName
+     * @return $this
+     */
+    public function union($firstName, $secondName, $newName)
+    {
+        $first = $this->collections[$firstName];
+        $second = $this->collections[$secondName];
+
+        $newCollection = new Collection();
+        $this->collections[$newName] = $newCollection;
+
+        $closure = function () use ($first, $second, $newName, $newCollection) {
+            !is_object($item = $first->getCurrent()) ?: $newCollection->addItem($item);
+            !is_object($item = $second->getCurrent()) ?: $newCollection->addItem($item);
         };
         $this->loopedClosures[] = $closure;
 
@@ -81,22 +105,21 @@ class Pipeline extends PipelineProcessor
         list($collectionName, $property) = explode('.', $expression);
         $collection = $this->collections[$collectionName];
 
-        $closure = function() use ($property, $order, $collection){
+        $closure = function () use ($property, $order, $collection) {
             $items = $collection->getItems();
-            usort($items, function($a, $b) use ($property, $order){
-                if($this->getValue($a, $property) == $this->getValue($b, $property)){
+            usort($items, function ($a, $b) use ($property, $order) {
+                if ($this->getValue($a, $property) == $this->getValue($b, $property)) {
                     return 0;
                 }
-                if($order == self::DESC){
+                if ($order == self::DESC) {
                     return $this->compare($a, $property, '<', $b) ? -1 : 1;
-                } elseif ($order == self::ASC){
+                } elseif ($order == self::ASC) {
                     return $this->compare($a, $property, '>', $b) ? -1 : 1;
                 }
             });
             $collection->setItems($items);
         };
         $this->finalClosures[] = $closure;
-
         return $this;
     }
 
@@ -119,7 +142,7 @@ class Pipeline extends PipelineProcessor
      */
     public function take($collectionName, $count = null)
     {
-        if(!$this->processed){
+        if (!$this->processed) {
             $this->process();
         }
         $collectionItems = $this->collections[$collectionName]->getItems();
