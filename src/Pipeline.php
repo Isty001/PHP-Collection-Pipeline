@@ -2,50 +2,21 @@
 
 namespace Pipeline;
 
-class Pipeline
+class Pipeline extends PipelineProcessor
 {
     /**
-     * @var Collection[]
+     * @param string $stringExpression
+     * @return $this
      */
-    private $collections;
-
-    /**
-     * @var \Closure[]
-     */
-    private $loopedClosures = [];
-
-    /**
-     * @var \Closure[]
-     */
-    private $finalClosures = [];
-
-    /**
-     * @var bool
-     */
-    private $processed;
-
-    /**
-     * @param array $collections
-     */
-    public function __construct(array $collections)
+    public function filter($stringExpression)
     {
-        $this->addCollections($collections);
-    }
+        $expression = new FilterExpression($stringExpression);
+        $collection = $this->collections[$expression->getCollectionName()];
 
-    /**
-     * @param string $expression
-     * @return Pipeline
-     */
-    public function filter($expression)
-    {
-        list($operator, $comparedTo, $collectionName, $property) = $this->parseFilterExpression($expression);
-
-        $collection = $this->collections[$collectionName];
-        $closure = function () use ($property, $operator, $comparedTo, $collection) {
+        $closure = function () use ($expression, $collection) {
             if (is_object($item = $collection->getCurrent())) {
-                if (!$this->compare($item, $property, $operator, $comparedTo)) {
+                if (!$this->compareExpression($item, $expression)) {
                     $collection->remove($item);
-                    return false;
                 }
             }
         };
@@ -57,9 +28,9 @@ class Pipeline
     /**
      * @param string $collectionName
      * @param callable $callback
-     * @return Pipeline
+     * @return $this
      */
-    public function filterCallback($collectionName, Callable $callback)
+    public function filterCallback($collectionName, callable $callback)
     {
         $collection = $this->collections[$collectionName];
         $closure = function() use ($callback, $collection){
@@ -76,65 +47,36 @@ class Pipeline
     }
 
     /**
-     * @param string $expression
-     * @return array
+     * @param string $stringExpression
+     * @param string $newCollectionName
+     * @return $this
      */
-    private function parseFilterExpression($expression)
+    public function select($stringExpression, $newCollectionName)
     {
-        list($subject, $operator, $comparedTo) = explode(' ', $expression);
-        list($collectionName, $property) = explode('.', $subject);
+        $expression = new FilterExpression($stringExpression);
+        $checkedCollection = $this->collections[$expression->getCollectionName()];
 
-        return [$operator, $comparedTo, $collectionName, $property];
-    }
+        $newCollection = new Collection();
+        $this->collections[$newCollectionName] = $newCollection;
 
-    /**
-     * @param object $subject
-     * @param string $property
-     * @param string $operator
-     * @param $comparedTo
-     * @return bool
-     */
-    private function compare($subject, $property, $operator, $comparedTo)
-    {
-        $subjectValue = $this->getValue($subject, $property);
-        $compareValue = is_object($comparedTo) ? $this->getValue($comparedTo, $property) : $comparedTo;
+        $closure = function() use ($expression, $checkedCollection, $newCollection) {
+            if(is_object($item = $checkedCollection->getCurrent())){
+                if($this->compareExpression($item, $expression)){
+                    $newCollection->addItem($item);
+                }
+            }
+        };
+        $this->loopedClosures[] = $closure;
 
-        switch ($operator) {
-            case '==':
-                return $subjectValue == $compareValue;
-            case '>':
-                return $subjectValue > $compareValue;
-            case '<':
-                return $subjectValue < $compareValue;
-            case '!==':
-                return $subjectValue !== $compareValue;
-        }
-    }
-
-    /**
-     * @param string $item
-     * @param string $property
-     * @return mixed
-     */
-    private function getValue($item, $property)
-    {
-        $method = 'get' . ucfirst($property);
-        if (method_exists($item, $method)) {
-            $value = $item->$method();
-            return $value;
-        } elseif (property_exists(get_class($item), $property) && !isset($value)) {
-            $value = $item->$property;
-            return $value;
-        }
-        return $value;
+        return $this;
     }
 
     /**
      * @param string $expression
      * @param string $order
-     * @return Pipeline
+     * @return $this
      */
-    public function sort($expression, $order = Option::DESC)
+    public function sort($expression, $order = self::DESC)
     {
         list($collectionName, $property) = explode('.', $expression);
         $collection = $this->collections[$collectionName];
@@ -145,9 +87,9 @@ class Pipeline
                 if($this->getValue($a, $property) == $this->getValue($b, $property)){
                     return 0;
                 }
-                if($order == Option::DESC){
+                if($order == self::DESC){
                     return $this->compare($a, $property, '<', $b) ? -1 : 1;
-                } elseif ($order == Option::ASC){
+                } elseif ($order == self::ASC){
                     return $this->compare($a, $property, '>', $b) ? -1 : 1;
                 }
             });
@@ -177,47 +119,13 @@ class Pipeline
      */
     public function take($collectionName, $count = null)
     {
-        $this->process();
-
+        if(!$this->processed){
+            $this->process();
+        }
         $collectionItems = $this->collections[$collectionName]->getItems();
-        if(!is_null($count)){
+        if (!is_null($count)) {
             array_slice($collectionItems, 0, $count);
         }
         return $collectionItems;
-    }
-
-    private function process()
-    {
-        if($this->processed){
-            return;
-        }
-        while (true) {
-            foreach ($this->loopedClosures as $loopedClosure) {
-                call_user_func($loopedClosure);
-            }
-            $result = null;
-            foreach ($this->collections as $collection) {
-                $finished = $collection->isFinished();
-                if(!$result[] = $finished){
-                    $collection->next();
-                }
-            }
-            if (count(array_unique($result)) == 1 && $result[0]) {
-                break;
-            }
-        }
-        foreach ($this->finalClosures as $finalClosure) {
-            call_user_func($finalClosure);
-        }
-    }
-
-    /**
-     * @param array $collections
-     */
-    private function addCollections(array $collections)
-    {
-        foreach ($collections as $name => $items) {
-            $this->collections[$name] = new Collection($items);
-        }
     }
 }

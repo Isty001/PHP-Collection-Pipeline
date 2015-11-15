@@ -24,7 +24,7 @@ class Collection
      */
     private $end;
 
-    public function __construct(array $items)
+    public function __construct(array $items = null)
     {
         $this->items = $items;
         $this->end = count($items);
@@ -61,6 +61,14 @@ class Collection
     {
         $this->items = $item;
         return $this;
+    }
+
+    /**
+     * @param object $item
+     */
+    public function addItem($item)
+    {
+        $this->items[] = $item;
     }
 
     public function remove($item)

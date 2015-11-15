@@ -1,8 +1,7 @@
 <?php
 
-namespace Tests\Pipeline;
+namespace Tests;
 
-use Pipeline\Option;
 use Pipeline\Pipeline;
 use Tests\Resources\Author;
 
@@ -56,7 +55,7 @@ class PipelineTest extends \PHPUnit_Framework_TestCase
         $authors = $this->createAuthors();
         $result =
             (new Pipeline(['authors' => $authors]))
-            ->sort('authors.age', Option::ASC)
+            ->sort('authors.age', Pipeline::ASC)
             ->take('authors');
 
         $this->assertEquals([$authors[3], $authors[5], $authors[1], $authors[0], $authors[4], $authors[2]], $result);
@@ -74,6 +73,18 @@ class PipelineTest extends \PHPUnit_Framework_TestCase
 
         $this->assertEquals($authors, $result);
     }
+
+    public function testSelect()
+    {
+        $authors = $this->createAuthors();
+        $result =
+            (new Pipeline(['authors' => $authors]))
+            ->select('authors.age > 26', 'olderAuthors')
+            ->take('olderAuthors', 2);
+
+        $this->assertEquals([0 => $authors[1], 1 => $authors[3], 2 => $authors[5]], $result);
+    }
+
     /**
      * @return array
      */
