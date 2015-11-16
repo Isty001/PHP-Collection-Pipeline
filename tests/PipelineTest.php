@@ -89,10 +89,10 @@ class PipelineTest extends \PHPUnit_Framework_TestCase
         $authors = $this->createAuthors();
         $result =
             (new Pipeline(['authors1' => $authors, 'authors2' => $authors]))
-            ->select('authors1.name == John', 'JohnAuth')
-            ->select('authors2.age == 60', 'OldAuth')
-            ->union('JohnAuth', 'OldAuth', 'MergedAuth')
-            ->take('MergedAuth');
+            ->select('authors1.name == John', 'John')
+            ->select('authors2.age == 60', 'Old')
+            ->union('John', 'Old', 'Merged')
+            ->take('Merged');
 
         $this->assertEquals([$authors[0], $authors[3], $authors[5]], $result);
     }
