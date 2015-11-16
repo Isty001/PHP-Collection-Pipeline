@@ -33,6 +33,30 @@ class Collection
         $this->end = count($items);
     }
 
+    public function next()
+    {
+        if($this->currentKey++ == $this->end){
+            $this->finished = true;
+            return;
+        }
+    }
+
+    /**
+     * @param object $item
+     */
+    public function remove($item)
+    {
+        unset($this->items[array_search($item, $this->items)]);
+    }
+
+    /**
+     * @return bool
+     */
+    public function isFinished()
+    {
+        return $this->finished;
+    }
+
     /**
      * @return object
      */
@@ -40,14 +64,6 @@ class Collection
     {
         if(array_key_exists($this->currentKey, $this->items)){
             return $this->items[$this->currentKey];
-        }
-    }
-
-    public function next()
-    {
-        if($this->currentKey++ == $this->end){
-            $this->finished = true;
-            return;
         }
     }
 
@@ -75,21 +91,5 @@ class Collection
         if(!in_array($item, $this->items)){
             $this->items[] = $item;
         }
-    }
-
-    /**
-     * @param object $item
-     */
-    public function remove($item)
-    {
-        unset($this->items[array_search($item, $this->items)]);
-    }
-
-    /**
-     * @return bool
-     */
-    public function isFinished()
-    {
-        return $this->finished;
     }
 }

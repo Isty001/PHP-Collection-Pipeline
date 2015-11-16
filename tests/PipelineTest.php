@@ -12,7 +12,7 @@ class PipelineTest extends \PHPUnit_Framework_TestCase
         $authors = $this->createAuthors();
         $result =
             (new Pipeline(['authors' => $authors]))
-            ->filter('authors.name == Hi')
+            ->filter('authors.name == Chris')
             ->filter('authors.age > 19')
             ->take('authors');
 
@@ -24,7 +24,7 @@ class PipelineTest extends \PHPUnit_Framework_TestCase
         $authors = $this->createAuthors();
         $result =
             (new Pipeline(['authors' => $authors]))
-            ->filter('authors.name !== Hi')
+            ->filter('authors.name !== Chris')
             ->take('authors');
 
         $this->assertEquals([0 => $authors[0], 3 => $authors[3], 5 => $authors[5]], $result);
@@ -39,7 +39,7 @@ class PipelineTest extends \PHPUnit_Framework_TestCase
         $collection =
             (new Pipeline(['expected' => $this->createAuthors()]))
             ->filterCallback('expected', function(Author $item){
-                if($item->getName() == 'Asd10' || $item->getName() == 'Asd999'){
+                if($item->getName() == 'Kate' || $item->getName() == 'Smith'){
                     return false;
                 }
                 return true;
@@ -89,9 +89,9 @@ class PipelineTest extends \PHPUnit_Framework_TestCase
         $authors = $this->createAuthors();
         $result =
             (new Pipeline(['authors1' => $authors, 'authors2' => $authors]))
-            ->select('authors1.name == Hello', 'HelloAuth')
+            ->select('authors1.name == John', 'JohnAuth')
             ->select('authors2.age == 60', 'OldAuth')
-            ->union('HelloAuth', 'OldAuth', 'MergedAuth')
+            ->union('JohnAuth', 'OldAuth', 'MergedAuth')
             ->take('MergedAuth');
 
         $this->assertEquals([$authors[0], $authors[3], $authors[5]], $result);
@@ -103,27 +103,27 @@ class PipelineTest extends \PHPUnit_Framework_TestCase
     private function createAuthors()
     {
         $author0 = new Author();
-        $author0->setName('Hello');
+        $author0->setName('John');
         $author0->setAge(26);
 
         $author1 = new Author();
-        $author1->setName('Hi');
+        $author1->setName('Chris');
         $author1->setAge(34);
 
         $author2 = new Author();
-        $author2->setName('Hi');
+        $author2->setName('Chris');
         $author2->setAge(19);
 
         $author3 = new Author();
-        $author3->setName('Asd999');
+        $author3->setName('Smith');
         $author3->setAge(60);
 
         $author4 = new Author();
-        $author4->setName('Hi');
+        $author4->setName('Chris');
         $author4->setAge(20);
 
         $author5 = new Author();
-        $author5->setName('Asd10');
+        $author5->setName('Kate');
         $author5->setAge(60);
 
         return [$author0, $author1, $author2, $author3, $author4, $author5];
