@@ -33,6 +33,7 @@ class Pipeline extends PipelineProcessor
     public function filterCallback($collectionName, callable $callback)
     {
         $collection = $this->collections[$collectionName];
+
         $closure = function () use ($callback, $collection) {
             if (is_object($item = $collection->getCurrent())) {
                 $result = call_user_func($callback, $item);
@@ -119,6 +120,7 @@ class Pipeline extends PipelineProcessor
             $collection->setItems($items);
         };
         $this->finalClosures[] = $closure;
+
         return $this;
     }
 
