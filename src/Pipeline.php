@@ -63,7 +63,6 @@ class Pipeline extends PipelineProcessor
             if (is_object($item = $checkedCollection->getCurrent())) {
                 if ($this->compareExpression($item, $expression)) {
                     $newCollection->addItem($item);
-                    $newCollection->setCurrent($item);
                 }
             }
         };

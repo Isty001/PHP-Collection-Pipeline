@@ -24,6 +24,9 @@ class Collection
      */
     private $end;
 
+    /**
+     * @param array $items
+     */
     public function __construct(array $items = [])
     {
         $this->items = $items;
@@ -56,10 +59,12 @@ class Collection
         return $this->items;
     }
 
+    /**
+     * @param array $item
+     */
     public function setItems(array $item)
     {
         $this->items = $item;
-        return $this;
     }
 
     /**
@@ -67,11 +72,14 @@ class Collection
      */
     public function addItem($item)
     {
-        if(!array_search($item, $this->items)){
+        if(!in_array($item, $this->items)){
             $this->items[] = $item;
         }
     }
 
+    /**
+     * @param object $item
+     */
     public function remove($item)
     {
         unset($this->items[array_search($item, $this->items)]);
@@ -83,10 +91,5 @@ class Collection
     public function isFinished()
     {
         return $this->finished;
-    }
-
-    public function setCurrent($item)
-    {
-        $this->currentKey = array_search($item, $this->items);
     }
 }
