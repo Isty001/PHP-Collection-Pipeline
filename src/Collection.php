@@ -75,6 +75,11 @@ class Collection
         return $this->items;
     }
 
+    public function isEmpty()
+    {
+        return empty($this->items);
+    }
+
     /**
      * @param array $item
      */

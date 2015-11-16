@@ -94,7 +94,6 @@ class PipelineProcessor
             $value = $item->$property;
             return $value;
         }
-        return $value;
     }
 
     /**
@@ -109,7 +108,7 @@ class PipelineProcessor
             $result = null;
             foreach ($this->collections as $key => $collection) {
                 if (!$result[] = $collection->isFinished()) {
-                    if(!empty($collection->getItems())){
+                    if(!$collection->isEmpty()){
                         $collection->next();
                     }
                 }
