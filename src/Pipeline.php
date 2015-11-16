@@ -131,7 +131,11 @@ class Pipeline extends PipelineProcessor
     public function unique($collectionName)
     {
         $collection = $this->collections[$collectionName];
-        $collection->setItems(array_unique($collection->getItems(), SORT_REGULAR));
+
+        $closure = function() use($collection) {
+            $collection->setItems(array_unique($collection->getItems(), SORT_REGULAR));
+        };
+        $this->finalClosures[] = $closure;
 
         return $this;
     }
