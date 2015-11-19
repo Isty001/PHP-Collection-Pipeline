@@ -25,11 +25,6 @@ class Collection
     private $end;
 
     /**
-     * @var bool
-     */
-    private $keyIncremented = false;
-
-    /**
      * @param array $items
      */
     public function __construct(array $items = [])
@@ -111,10 +106,5 @@ class Collection
     public function setFinished($finished)
     {
         $this->finished = $finished;
-    }
-
-    public function getKey()
-    {
-        return $this->currentKey;
     }
 }
