@@ -25,6 +25,11 @@ class Collection
     private $end;
 
     /**
+     * @var bool
+     */
+    private $keyIncremented = false;
+
+    /**
      * @param array $items
      */
     public function __construct(array $items = [])
@@ -33,12 +38,17 @@ class Collection
         $this->end = count($items);
     }
 
-    public function next()
+    /**
+     * @return bool
+     */
+    public function isFinished()
     {
-        if($this->currentKey++ == $this->end){
-            $this->finished = true;
-            return;
-        }
+        return $this->finished;
+    }
+
+    public function isEmpty()
+    {
+        return empty($this->items);
     }
 
     /**
@@ -50,19 +60,11 @@ class Collection
     }
 
     /**
-     * @return bool
-     */
-    public function isFinished()
-    {
-        return $this->finished;
-    }
-
-    /**
      * @return object
      */
     public function getCurrent()
     {
-        if(array_key_exists($this->currentKey, $this->items)){
+        if (array_key_exists($this->currentKey, $this->items)) {
             return $this->items[$this->currentKey];
         }
     }
@@ -75,9 +77,27 @@ class Collection
         return $this->items;
     }
 
-    public function isEmpty()
+    public function isItemSet($item)
     {
-        return empty($this->items);
+        return in_array($item, $this->items);
+    }
+
+    /**
+     * @param object $item
+     */
+    public function addItem($item)
+    {
+        if (!$this->isItemSet($item)) {
+            $this->items[] = $item;
+            $this->currentKey = array_search($item, $this->items);
+        }
+    }
+
+    public function next()
+    {
+        if ($this->currentKey++ == $this->end) {
+            $this->finished = true;
+        }
     }
 
     /**
@@ -88,13 +108,13 @@ class Collection
         $this->items = $item;
     }
 
-    /**
-     * @param object $item
-     */
-    public function addItem($item)
+    public function setFinished($finished)
     {
-        if(!in_array($item, $this->items)){
-            $this->items[] = $item;
-        }
+        $this->finished = $finished;
+    }
+
+    public function getKey()
+    {
+        return $this->currentKey;
     }
 }

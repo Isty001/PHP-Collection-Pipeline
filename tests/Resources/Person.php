@@ -2,7 +2,7 @@
 
 namespace Tests\Resources;
 
-class Author
+class Person
 {
     /**
      * @var string

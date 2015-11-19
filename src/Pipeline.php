@@ -64,9 +64,14 @@ class Pipeline extends PipelineProcessor
             if (is_object($item = $checkedCollection->getCurrent())) {
                 if ($this->compareExpression($item, $expression)) {
                     $newCollection->addItem($item);
+                    $newCollection->setFinished(false);
                 }
             }
+            if($checkedCollection->isFinished()) {
+                $newCollection->setFinished(true);
+            }
         };
+
         $this->loopedClosures[] = $closure;
 
         return $this;
@@ -89,6 +94,27 @@ class Pipeline extends PipelineProcessor
         $closure = function () use ($first, $second, $newName, $newCollection) {
             !is_object($item = $first->getCurrent()) ?: $newCollection->addItem($item);
             !is_object($item = $second->getCurrent()) ?: $newCollection->addItem($item);
+        };
+        $this->loopedClosures[] = $closure;
+
+        return $this;
+    }
+
+    /**
+     * @param string $fromName
+     * @param string $removedName
+     * @return $this
+     */
+    public function sub($fromName, $removedName)
+    {
+        $from = $this->collections[$fromName];
+        $remove = $this->collections[$removedName];
+
+        $closure = function () use ($from, $remove) {
+
+            if ($from->isItemSet($item = $remove->getCurrent())) {
+                $from->remove($item);
+            }
         };
         $this->loopedClosures[] = $closure;
 
@@ -132,7 +158,7 @@ class Pipeline extends PipelineProcessor
     {
         $collection = $this->collections[$collectionName];
 
-        $closure = function() use($collection) {
+        $closure = function () use ($collection) {
             $collection->setItems(array_unique($collection->getItems(), SORT_REGULAR));
         };
         $this->finalClosures[] = $closure;
@@ -152,7 +178,7 @@ class Pipeline extends PipelineProcessor
         }
         $collectionItems = $this->collections[$collectionName]->getItems();
         if (!is_null($count)) {
-            array_slice($collectionItems, 0, $count);
+            $collectionItems = array_slice($collectionItems, 0, $count);
         }
         return $collectionItems;
     }

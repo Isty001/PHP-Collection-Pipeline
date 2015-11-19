@@ -107,10 +107,8 @@ class PipelineProcessor
             }
             $result = null;
             foreach ($this->collections as $key => $collection) {
-                if (!$result[] = $collection->isFinished()) {
-                    if(!$collection->isEmpty()){
-                        $collection->next();
-                    }
+                if (!$collection->isEmpty() && !$result[] = $collection->isFinished()) {
+                    $collection->next();
                 }
             }
             if (count(array_unique($result)) == 1 && $result[0]) {
