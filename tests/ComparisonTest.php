@@ -5,7 +5,7 @@ namespace Tests;
 use Pipeline\Pipeline;
 use Tests\Resources\Person;
 
-class ComplexPipelineTest extends \PHPUnit_Framework_TestCase
+class ComparisonTest extends \PHPUnit_Framework_TestCase
 {
     /**
      * @var Person[]
@@ -26,7 +26,7 @@ class ComplexPipelineTest extends \PHPUnit_Framework_TestCase
     {
         $pipeline =
             (new Pipeline(['People' => $this->people]))
-                ->filter('People.name !== John')
+                ->filter('People.name !== Walter')
                 ->select('People.name == Fox', 'Fox')
                 ->filter('Fox.age < 30')
                 ->select('People.name == Scully', 'Scully')
@@ -52,15 +52,13 @@ class ComplexPipelineTest extends \PHPUnit_Framework_TestCase
         }
         $agents = array_merge($fox, $scully);
 
-        usort($agents, function(Person $a, Person $b){
-            if($a->getAge() == $b->getAge()){
+        usort($agents, function (Person $a, Person $b) {
+            if ($a->getAge() == $b->getAge()) {
                 return 0;
             }
             return $a->getAge() > $b->getAge() ? -1 : 1;
         });
-        $agents = array_unique($agents, SORT_REGULAR);
-
-        return $agents;
+        return array_unique($agents, SORT_REGULAR);
     }
 
     /**
@@ -68,7 +66,7 @@ class ComplexPipelineTest extends \PHPUnit_Framework_TestCase
      */
     private function generateObjects()
     {
-        $names = ['John', 'Smith', 'Fox', 'Scully'];
+        $names = ['Walter', 'Smith', 'Fox', 'Scully'];
         for ($i = 0; $i <= 30; $i++) {
             $author = new Person();
             $author->setAge(rand(18, 70));
